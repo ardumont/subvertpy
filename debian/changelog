@@ -1,3 +1,9 @@
+subvertpy (0.9.3-5) unstable; urgency=medium
+
+  * Port to python3
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 08 Dec 2016 15:09:46 +0100
+
 subvertpy (0.9.3-4) unstable; urgency=low
 
   * Use https in watch file.
