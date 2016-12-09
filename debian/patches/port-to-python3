@@ -1,0 +1,101 @@
+Index: python-subvertpy/bin/subvertpy-fast-export
+===================================================================
+--- python-subvertpy.orig/bin/subvertpy-fast-export	2016-12-09 15:27:00.742834551 +0100
++++ python-subvertpy/bin/subvertpy-fast-export	2016-12-09 15:27:00.738834607 +0100
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/usr/bin/env python3
+ #
+ # svn-fast-export.py
+ # ----------
+@@ -199,7 +199,7 @@
+ 
+     if options.version:
+         import subvertpy
+-        print ".".join(str(x) for x in subvertpy.__version__)
++        print(".".join(str(x) for x in subvertpy.__version__))
+         sys.exit(0)
+     if options.trunk_path != None:
+         trunk_path = options.trunk_path
+Index: python-subvertpy/Makefile
+===================================================================
+--- python-subvertpy.orig/Makefile	2016-12-09 15:27:00.742834551 +0100
++++ python-subvertpy/Makefile	2016-12-09 15:27:00.738834607 +0100
+@@ -1,8 +1,8 @@
+-PYTHON = python
++PYTHON = python3
+ PYDOCTOR = pydoctor
+ PYDOCTOR_OPTIONS ?=
+ SETUP = $(PYTHON) setup.py
+-ifeq ($(shell $(PYTHON) -c "import sys; print sys.version_info >= (2, 7)"),True)
++ifeq ($(shell $(PYTHON) -c "import sys; print(sys.version_info >= (2, 7))"),True)
+ TESTRUNNER = unittest
+ else
+ TESTRUNNER = unittest2.__main__
+Index: python-subvertpy/subvertpy/_ra.c
+===================================================================
+--- python-subvertpy.orig/subvertpy/_ra.c	2016-12-09 15:27:00.742834551 +0100
++++ python-subvertpy/subvertpy/_ra.c	2016-12-09 15:27:00.738834607 +0100
+@@ -40,16 +40,16 @@
+ 
+ static PyObject *busy_exc;
+ 
+-staticforward PyTypeObject Reporter_Type;
+-staticforward PyTypeObject RemoteAccess_Type;
+-staticforward PyTypeObject AuthProvider_Type;
+-staticforward PyTypeObject CredentialsIter_Type;
+-staticforward PyTypeObject Auth_Type;
++static PyTypeObject Reporter_Type;
++static PyTypeObject RemoteAccess_Type;
++static PyTypeObject AuthProvider_Type;
++static PyTypeObject CredentialsIter_Type;
++static PyTypeObject Auth_Type;
+ 
+ static bool ra_check_svn_path(char *path)
+ {
+ 	/* svn_ra_check_path will raise an assertion error if the path has a
+-	 * leading '/'. Raise a Python exception if there ar eleading '/'s so that 
++	 * leading '/'. Raise a Python exception if there ar eleading '/'s so that
+ 	 * the Python interpreter won't crash and die. */
+ 	if (*path == '/') {
+ 		PyErr_SetString(PyExc_ValueError, "invalid path has a leading '/'");
+Index: python-subvertpy/subvertpy/ra.h
+===================================================================
+--- python-subvertpy.orig/subvertpy/ra.h	2016-12-09 15:27:00.742834551 +0100
++++ python-subvertpy/subvertpy/ra.h	2016-12-09 15:27:00.738834607 +0100
+@@ -16,6 +16,9 @@
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+  */
++#if PY_MAJOR_VERSION >=3
++#  define Py_TPFLAGS_HAVE_ITER 0
++#endif
+ 
+ #ifndef _BZR_SVN_RA_H_
+ #define _BZR_SVN_RA_H_
+Index: python-subvertpy/subvertpy/wc.c
+===================================================================
+--- python-subvertpy.orig/subvertpy/wc.c	2016-12-09 15:26:52.018955469 +0100
++++ python-subvertpy/subvertpy/wc.c	2016-12-09 15:27:22.670530623 +0100
+@@ -39,9 +39,9 @@
+ #define REPORTER_T svn_ra_reporter2_t
+ #endif
+ 
+-staticforward PyTypeObject Entry_Type;
+-staticforward PyTypeObject Status_Type;
+-staticforward PyTypeObject Adm_Type;
++static PyTypeObject Entry_Type;
++static PyTypeObject Status_Type;
++static PyTypeObject Adm_Type;
+ 
+ static PyObject *py_entry(const svn_wc_entry_t *entry);
+ static PyObject *py_status(const svn_wc_status2_t *status);
+@@ -125,7 +125,7 @@
+ 	apr_pool_t *pool;
+ 	svn_wc_committed_queue_t *queue;
+ } CommittedQueueObject;
+-staticforward PyTypeObject CommittedQueue_Type;
++static PyTypeObject CommittedQueue_Type;
+ 
+ #if ONLY_SINCE_SVN(1, 5)
+ static svn_error_t *py_ra_report_set_path(void *baton, const char *path, svn_revnum_t revision, svn_depth_t depth, int start_empty, const char *lock_token, apr_pool_t *pool)
