@@ -1,7 +1,7 @@
 Index: python-subvertpy/bin/subvertpy-fast-export
 ===================================================================
---- python-subvertpy.orig/bin/subvertpy-fast-export	2016-12-09 15:27:00.742834551 +0100
-+++ python-subvertpy/bin/subvertpy-fast-export	2016-12-09 15:27:00.738834607 +0100
+--- python-subvertpy.orig/bin/subvertpy-fast-export	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/bin/subvertpy-fast-export	2016-12-09 15:41:01.071189529 +0100
 @@ -1,4 +1,4 @@
 -#!/usr/bin/python
 +#!/usr/bin/env python3
@@ -19,8 +19,8 @@ Index: python-subvertpy/bin/subvertpy-fast-export
          trunk_path = options.trunk_path
 Index: python-subvertpy/Makefile
 ===================================================================
---- python-subvertpy.orig/Makefile	2016-12-09 15:27:00.742834551 +0100
-+++ python-subvertpy/Makefile	2016-12-09 15:27:00.738834607 +0100
+--- python-subvertpy.orig/Makefile	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/Makefile	2016-12-09 15:41:01.071189529 +0100
 @@ -1,8 +1,8 @@
 -PYTHON = python
 +PYTHON = python3
@@ -34,9 +34,9 @@ Index: python-subvertpy/Makefile
  TESTRUNNER = unittest2.__main__
 Index: python-subvertpy/subvertpy/_ra.c
 ===================================================================
---- python-subvertpy.orig/subvertpy/_ra.c	2016-12-09 15:27:00.742834551 +0100
-+++ python-subvertpy/subvertpy/_ra.c	2016-12-09 15:27:00.738834607 +0100
-@@ -40,16 +40,16 @@
+--- python-subvertpy.orig/subvertpy/_ra.c	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/_ra.c	2016-12-09 15:41:01.071189529 +0100
+@@ -40,11 +40,11 @@
  
  static PyObject *busy_exc;
  
@@ -53,16 +53,10 @@ Index: python-subvertpy/subvertpy/_ra.c
  
  static bool ra_check_svn_path(char *path)
  {
- 	/* svn_ra_check_path will raise an assertion error if the path has a
--	 * leading '/'. Raise a Python exception if there ar eleading '/'s so that 
-+	 * leading '/'. Raise a Python exception if there ar eleading '/'s so that
- 	 * the Python interpreter won't crash and die. */
- 	if (*path == '/') {
- 		PyErr_SetString(PyExc_ValueError, "invalid path has a leading '/'");
 Index: python-subvertpy/subvertpy/ra.h
 ===================================================================
---- python-subvertpy.orig/subvertpy/ra.h	2016-12-09 15:27:00.742834551 +0100
-+++ python-subvertpy/subvertpy/ra.h	2016-12-09 15:27:00.738834607 +0100
+--- python-subvertpy.orig/subvertpy/ra.h	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/ra.h	2016-12-09 15:41:01.071189529 +0100
 @@ -16,6 +16,9 @@
   * along with this program; if not, write to the Free Software
   * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
@@ -75,8 +69,8 @@ Index: python-subvertpy/subvertpy/ra.h
  #define _BZR_SVN_RA_H_
 Index: python-subvertpy/subvertpy/wc.c
 ===================================================================
---- python-subvertpy.orig/subvertpy/wc.c	2016-12-09 15:26:52.018955469 +0100
-+++ python-subvertpy/subvertpy/wc.c	2016-12-09 15:27:22.670530623 +0100
+--- python-subvertpy.orig/subvertpy/wc.c	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/wc.c	2016-12-09 15:41:01.071189529 +0100
 @@ -39,9 +39,9 @@
  #define REPORTER_T svn_ra_reporter2_t
  #endif
@@ -99,3 +93,171 @@ Index: python-subvertpy/subvertpy/wc.c
  
  #if ONLY_SINCE_SVN(1, 5)
  static svn_error_t *py_ra_report_set_path(void *baton, const char *path, svn_revnum_t revision, svn_depth_t depth, int start_empty, const char *lock_token, apr_pool_t *pool)
+Index: python-subvertpy/subvertpy/delta.py
+===================================================================
+--- python-subvertpy.orig/subvertpy/delta.py	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/delta.py	2016-12-09 15:45:25.827521121 +0100
+@@ -32,8 +32,7 @@
+ 
+ DELTA_WINDOW_SIZE = 102400
+ 
+-def apply_txdelta_window(sbuf,
+-            (sview_offset, sview_len, tview_len, src_ops, ops, new_data)):
++def apply_txdelta_window(sbuf, args):
+     """Apply a txdelta window to a buffer.
+ 
+     :param sbuf: Source buffer (as bytestring)
+@@ -45,6 +44,7 @@
+     :param new_data: Buffer with possible new data
+     :return: Target buffer
+     """
++    sview_offset, sview_len, tview_len, src_ops, ops, new_data = args
+     sview = sbuf[sview_offset:sview_offset+sview_len]
+     tview = txdelta_apply_ops(src_ops, ops, new_data, sview)
+     if len(tview) != tview_len:
+@@ -168,7 +168,7 @@
+     return ret, text
+ 
+ 
+-def pack_svndiff_instruction((action, offset, length)):
++def pack_svndiff_instruction(args):
+     """Pack a SVN diff instruction
+ 
+     :param action: Action
+@@ -176,6 +176,7 @@
+     :param length: Length
+     :return: encoded text
+     """
++    action, offset, length = args
+     if length < 0x3f:
+         text = chr((action << 6) + length)
+     else:
+Index: python-subvertpy/subvertpy/__init__.py
+===================================================================
+--- python-subvertpy.orig/subvertpy/__init__.py	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/__init__.py	2016-12-09 15:41:01.071189529 +0100
+@@ -127,7 +127,7 @@
+             from warnings import warn
+             warn("subvertpy extensions are outdated and need to be rebuilt")
+             break
+-except ImportError, e:
++except ImportError as e:
+     raise ImportError("Unable to load subvertpy extensions: %s" % e)
+ 
+ 
+Index: python-subvertpy/subvertpy/properties.py
+===================================================================
+--- python-subvertpy.orig/subvertpy/properties.py	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/properties.py	2016-12-09 15:41:01.071189529 +0100
+@@ -152,7 +152,8 @@
+     :param merges: dictionary mapping paths to lists of ranges
+     :return: Property contents
+     """
+-    def formatrange((start, end, inheritable)):
++    def formatrange(args):
++        start, end, inheritable = args
+         suffix = ""
+         if not inheritable:
+             suffix = "*"
+Index: python-subvertpy/subvertpy/ra_svn.py
+===================================================================
+--- python-subvertpy.orig/subvertpy/ra_svn.py	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/ra_svn.py	2016-12-09 15:45:06.715785925 +0100
+@@ -476,7 +476,7 @@
+             try:
+                 self._socket = socket.socket(family, socktype, proto)
+                 self._socket.connect(sockaddr)
+-            except socket.error, err:
++            except socket.error as err:
+                 if self._socket is not None:
+                     self._socket.close()
+                 self._socket = None
+@@ -1075,7 +1075,7 @@
+             self.wfile.write, self._server._logf)
+         try:
+             server.serve()
+-        except socket.error, e:
++        except socket.error as e:
+             if e.args[0] == EPIPE:
+                 return
+             raise
+Index: python-subvertpy/subvertpy/tests/__init__.py
+===================================================================
+--- python-subvertpy.orig/subvertpy/tests/__init__.py	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/tests/__init__.py	2016-12-09 15:41:01.071189529 +0100
+@@ -251,7 +251,7 @@
+                     f.write("#!/bin/sh\n")
+                 finally:
+                     f.close()
+-                os.chmod(revprop_hook, os.stat(revprop_hook).st_mode | 0111)
++                os.chmod(revprop_hook, os.stat(revprop_hook).st_mode | 0o111)
+ 
+         if sys.platform == 'win32':
+             return 'file:%s' % urllib.pathname2url(abspath)
+Index: python-subvertpy/subvertpy/tests/test_properties.py
+===================================================================
+--- python-subvertpy.orig/subvertpy/tests/test_properties.py	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/tests/test_properties.py	2016-12-09 15:44:04.820643523 +0100
+@@ -29,7 +29,7 @@
+         super(TestProperties, self).setUp()
+ 
+     def test_time_from_cstring(self):
+-        self.assertEqual(1225704780716938L, properties.time_from_cstring("2008-11-03T09:33:00.716938Z"))
++        self.assertEqual(1225704780716938, properties.time_from_cstring("2008-11-03T09:33:00.716938Z"))
+ 
+     def test_time_from_cstring_independent_from_dst(self):
+         old_tz = os.environ.get('TZ', None)
+@@ -42,7 +42,7 @@
+             os.environ['TZ'] = 'Europe/London'
+             time.tzset()
+             # Now test a time within that DST
+-            self.assertEqual(1275295762430000L, properties.time_from_cstring("2010-05-31T08:49:22.430000Z"))
++            self.assertEqual(1275295762430000, properties.time_from_cstring("2010-05-31T08:49:22.430000Z"))
+         finally:
+             if old_tz is None:
+                 del os.environ['TZ']
+@@ -51,7 +51,7 @@
+             time.tzset()
+ 
+     def test_time_to_cstring(self):
+-        self.assertEqual("2008-11-03T09:33:00.716938Z", properties.time_to_cstring(1225704780716938L))
++        self.assertEqual("2008-11-03T09:33:00.716938Z", properties.time_to_cstring(1225704780716938))
+ 
+ 
+ class TestExternalsParser(TestCase):
+Index: python-subvertpy/subvertpy/tests/test_wc.py
+===================================================================
+--- python-subvertpy.orig/subvertpy/tests/test_wc.py	2016-12-09 15:41:01.075189473 +0100
++++ python-subvertpy/subvertpy/tests/test_wc.py	2016-12-09 15:43:38.069014187 +0100
+@@ -261,7 +261,7 @@
+                 pass
+         editor = Editor()
+         (tmpfile, digest) = adm.transmit_text_deltas("bar", True, editor)
+-        self.assertEqual(editor._windows, [(0L, 0, 5, 0, [(2, 0, 5)], 'blala'), None])
++        self.assertEqual(editor._windows, [(0, 0, 5, 0, [(2, 0, 5)], 'blala'), None])
+         self.assertIsInstance(tmpfile, str)
+         self.assertEqual(16, len(digest))
+ 
+@@ -300,7 +300,8 @@
+         adm = wc.WorkingCopy(None, "checkout", True)
+         try:
+             self.assertIs(None, adm.probe_try(self.test_dir))
+-        except subvertpy.SubversionException, (msg, num):
++        except subvertpy.SubversionException as err:
++            msg, num = err
+             if num != subvertpy.ERR_WC_NOT_WORKING_COPY:
+                 raise
+         self.assertEqual("checkout", adm.probe_try(os.path.join("checkout", "bar")).access_path())
+Index: python-subvertpy/subvertpy/tests/test_client.py
+===================================================================
+--- python-subvertpy.orig/subvertpy/tests/test_client.py	2016-12-08 13:43:43.604734905 +0100
++++ python-subvertpy/subvertpy/tests/test_client.py	2016-12-09 15:44:16.240485293 +0100
+@@ -245,7 +245,7 @@
+         info = self.client.info("dc/foo")
+         self.assertEqual(["foo"], info.keys())
+         self.assertEqual(1, info["foo"].revision)
+-        self.assertEqual(3L, info["foo"].size)
++        self.assertEqual(3, info["foo"].size)
+         self.build_tree({"dc/bar": "blablabla"})
+         self.client.add(os.path.abspath("dc/bar"))
+ 
